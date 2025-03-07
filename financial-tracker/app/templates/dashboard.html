@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-5">
+    <div class="grid">
+        <h1 class="my-4 text-center text-primary">📊 Welcome to Your Dashboard, {{ current_user.username }}!</h1>
+        <div class="row">
+            <!-- Budget Summary -->
+            <div class="col-md-4">
+                <div class="card bg-success text-white mb-3 shadow-lg">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4>Summary</h4>
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Budget <strong>${{ monthly_budget }}</strong></h5>
+                        <h5 class="card-title">Expense <strong>${{ total_expenses }}</strong></h5>
+                        <p class="mt-2 text-center text-white">{{ expense_percentage if expense_percentage is not none else 0 | round(2) }}% of budget spent</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Remaining Budget -->
+            <div class="col-md-4">
+                <div class="card bg-danger text-white mb-3 shadow-lg">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4>Expense Summary</h4>
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Remaining Budget <strong>${{ remaining_budget }}</strong></h5>
+                        <p class="card-text">Expense Percentage <strong>{{ expense_percentage if expense_percentage is not none else 0 | round(2) }}%</strong></p>
+                        <p class="mt-2 text-center">{{ remaining_budget_percentage if remaining_budget_percentage is not none else 0 | round(2) }}% of your budget remaining</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expenses Comparison -->
+            <div class="col-md-4">
+                <div class="card bg-warning text-dark mb-3 shadow-lg">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4>💰 Expenses Comparison</h4>
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Current Month: <strong>${{ total_expenses }}</strong></h5>
+                        <p class="card-text">Last Month: <strong>${{ last_month_expenses }}</strong></p>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <p class="text-muted">Difference: </p>
+                            <p class="font-weight-bold {% if total_expenses > last_month_expenses %}text-danger{% else %}text-success{% endif %}">
+                                {% if total_expenses > last_month_expenses %}
+                                    +${{ total_expenses - last_month_expenses }}
+                                {% else %}
+                                    -${{ last_month_expenses - total_expenses }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- last seven Expenses Graph -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h3 class="text-primary"><i class="fas fa-chart-line"></i> Last Seven Days Expenses</h3>
+                <canvas id="dailyExpenseChart" width="400" height="200"></canvas>
+                <script type="application/json" id="dailyExpensesData">
+                    {{ daily_expenses | tojson | safe }}
+                </script>
+            </div>
+
+        <!-- Category-wise Expense Breakdown -->
+        <div class="col-md-6">
+            <h3 class="text-primary mb-4"><i class="fas fa-pie-chart"></i> Category-wise Expenses</h3>
+            <div class="card shadow-sm mt-5">
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% if category_expenses %}
+                            {% for category in category_expenses %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <strong>{{ category.category }}:</strong>
+                                <span class="badge bg-success text-white">${{ category.total }}</span>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item text-center text-muted">
+                                <i class="fas fa-info-circle"></i> No category expenses recorded for this month.
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        </div>
+
+        <!-- Recent Transactions -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <h3 class="text-primary"><i class="fas fa-receipt"></i> Recent Transactions</h3>
+        <table class="table table-striped table-hover shadow">
+            <thead class="bg-primary text-white">
+                <tr>
+                    <th scope="col">📅 Date</th>
+                    <th scope="col">📝 Description</th>
+                    <th scope="col">💵 Amount</th>
+                    <th scope="col">📂 Category</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in last_5_expenses %}
+                    <tr>
+                        <td>{{ expense.date }}</td>
+                        <td>{{ expense.category.name }}</td>
+                        <td>${{ "{:,.2f}".format(expense.amount) }}</td>
+                        <td>{{ expense.description }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+{% endblock %}

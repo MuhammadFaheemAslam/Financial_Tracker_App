@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container text-center mt-5">
+        <h1 class="display-4">Welcome to Finance Tracker</h1>
+        <p class="lead">Track your expenses, set budgets, and manage finances easily.</p>
+
+        
+
+        <div class="d-flex justify-content-center mt-5">
+            <!-- Add Expense and Set Budget Buttons -->
+            <div class="row w-50">
+                <div class="col-md-6 mb-4">
+                    <a href="{{ url_for('main.set_budget') }}" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-credit-card"></i> Set Budget
+                    </a>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <a href="{{ url_for('main.add_expense') }}" class="btn btn-danger btn-lg w-100">
+                        <i class="fas fa-plus-circle"></i> Add Expense
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

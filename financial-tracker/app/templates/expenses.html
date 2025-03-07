@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-md-center">
+    <div class="col col-lg-10">
+        <div class="d-flex justify-content-between mb-4">
+            <h2>All Expenses</h2>
+            <a class="btn btn-success" href="{{ url_for('main.add_expense') }}"><i class="fas fa-plus-circle"></i> Add Expense</a>
+        </div>
+
+        <!-- Filter Form -->
+        <form method="GET" class="mb-4">
+            <div class="row">
+                <!-- Month Filter -->
+                <div class="col-md-3">
+                    <select class="form-select" name="month" id="month" onchange="this.form.submit()">
+                        <option value="">All Months</option>  <!-- Option for all months -->
+                        {% for m in range(1, 13) %}
+                            <option value="{{ m }}" {% if m == month %} selected {% endif %}>
+                                {{ months[m-1] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Year Filter -->
+                <div class="col-md-3">
+                    <select class="form-select" name="year" id="year" onchange="this.form.submit()">
+                        <option value="">All Years</option>  <!-- Option for all years -->
+                        {% for y in range(current_year - 1, current_year + 2) %}
+                            <option value="{{ y }}" {% if y == year %} selected {% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="col-md-3">
+                    <select class="form-select" name="category" id="category" onchange="this.form.submit()">
+                        <option value="">All Categories</option>  <!-- Option for all categories -->
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {% if category.id == selected_category %} selected {% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <!-- Expenses Table -->
+        <table class="table">
+            <thead class="table-info">
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                    <tr>
+                        <td>{{ expense.date.strftime('%b %d, %Y %I:%M %p') }}</td>
+                        <td>{{ expense.category.name }}</td>
+                        <td>${{ "{:,.2f}".format(expense.amount) }}</td>
+                        <td>{{ expense.description }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

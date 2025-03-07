@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-md-center">
+    <div class="col col-lg-9 shadow p-5">
+        <h2>Set Budget</h2>
+        <form method="POST">
+            <div class="mb-3">
+                <label>Budget Amount ($)</label>
+                <input type="number" name="amount" class="form-control" step="0.01" required>
+            </div>
+            <div class="mb-3">
+                <label>Period</label>
+                <select name="period" class="form-control" required>
+                    <option value="monthly">Monthly</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="biweekly">Biweekly</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label>Month</label>
+                <select name="budget_month" class="form-control" required>
+                    {% set months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] %}
+                    {% for month in months %}
+                        <option value="{{ loop.index }}">{{ month }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label>Year</label>
+                <select name="budget_year" class="form-control" required>
+                    {% for year in years %}
+                        <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Set Budget</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

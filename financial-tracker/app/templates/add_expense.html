@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-md-center">
+    <div class="col col-lg-9 shadow p-5">
+        <h2>Add Expense</h2>
+        <form method="POST">
+            <div class="mb-3">
+                <label>Category</label>
+                <select name="category" class="form-control" required>
+                    {% if categories %}
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    {% else %}
+                        <option value="" disabled selected>Add Category</option>
+                    {% endif %}
+                </select>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#categoryModal" style="text-decoration: none;">
+                    <span class="bi bi-plus-circle"></span>Add New Category</a>  
+            </div>
+            <div class="mb-3">
+                <label>Amount ($)</label>
+                <input type="number" name="amount" class="form-control" step="0.01" required>
+            </div>
+            <div class="mb-3">
+                <label>Description</label>
+                <input type="text" name="description" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="expense_date">Date and Time</label>
+                <input type="datetime-local" name="expense_date" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-success">Add Expense</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md"> <!-- Medium-Sized Modal -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="categoryModalLabel">Manage Categories</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if categories %}
+                <h6 class="text-muted">Existing Categories:</h6>
+                <div class="d-flex flex-wrap gap-1 mb-3">
+                    {% for category in categories %}
+                        <span class="badge bg-primary px-3 py-2">{{ category.name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <h6 class="mt-3 text-muted">Add New Category:</h6>
+                <form action="{{ url_for('main.add_category') }}" method="POST">
+                    <div class="mb-2">
+                        <input type="text" id="newCategory" name="category_name" 
+                               class="form-control form-control-md" placeholder="Enter category" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Add Category</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
