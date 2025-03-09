@@ -42,7 +42,13 @@ The app uses Flask for the backend, MySQL for data storage (via AWS RDS), and EC
 
 ### Home Page
 
-![Home Page](screenshots/homepage.png "Home Page")
+    ![Home Page](AppScreens/Homepage.png "Home Page")
+
+The HomePage shows an overview of Add expenses, Set budget.
+
+### Home Page
+
+    ![Dashboard Page](screenshots/homepage.png "Home Page")
 
 The dashboard shows an overview of your total monthly expenses, budget, and a comparison chart.
 
