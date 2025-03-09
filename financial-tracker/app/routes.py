@@ -265,27 +265,30 @@ def view_expenses():
         selected_category=selected_category
     )
 
-# Dashboard Route
 
 @bp.route('/dashboard', methods=['GET'])
 @login_required
 def dashboard():
     current_month = datetime.utcnow().month
     current_year = datetime.utcnow().year
-    today = datetime.utcnow()  
+    today = datetime.utcnow()
 
+    # Get the current month's budget
     monthly_budget = Budget.query.filter_by(user_id=current_user.id, period="monthly", month=current_month, year=current_year).first()
     monthly_budget_amount = monthly_budget.amount if monthly_budget else 0
 
-    total_expenses = db.session.query(func.sum(Expense.amount)).filter(
+    # Calculate the total expenses for the current month
+    total_expenses = round(db.session.query(func.sum(Expense.amount)).filter(
         Expense.user_id == current_user.id,
         func.extract('month', Expense.date) == current_month,
         func.extract('year', Expense.date) == current_year
-    ).scalar() or 0
+    ).scalar() or 0, 2)
 
-    remaining_monthly_budget = round(monthly_budget_amount - total_expenses,2)
+    # Calculate remaining budget and percentage
+    remaining_monthly_budget = round(monthly_budget_amount - total_expenses, 2)
     remaining_budget_percentage = round((remaining_monthly_budget / monthly_budget_amount) * 100) if monthly_budget_amount > 0 else 0
 
+    # Fetch category-wise expense data
     category_expenses = db.session.query(Category.name, func.sum(Expense.amount)).join(Expense).filter(
         Expense.user_id == current_user.id,
         func.extract('month', Expense.date) == current_month,
@@ -294,16 +297,16 @@ def dashboard():
 
     category_expenses_data = [{"category": category, "total": total} for category, total in category_expenses]
 
-
+    # Fetch expenses for the last 7 days
     last_7_days_expenses = db.session.query(func.extract('day', Expense.date), func.sum(Expense.amount)).filter(
         Expense.user_id == current_user.id,
-        Expense.date >= today - timedelta(days=7),  
+        Expense.date >= today - timedelta(days=7),
         Expense.date <= today
     ).group_by(func.extract('day', Expense.date)).all()
 
     last_7_days_expenses_data = [{"day": int(day), "total": total} for day, total in last_7_days_expenses]
 
-
+    # Calculate last month's expenses
     last_month = current_month - 1 if current_month > 1 else 12
     last_month_year = current_year if current_month > 1 else current_year - 1
 
@@ -313,6 +316,7 @@ def dashboard():
         func.extract('year', Expense.date) == last_month_year
     ).scalar() or 0
 
+    # Calculate the expense percentage of the monthly budget
     expense_percentage = round((total_expenses / monthly_budget_amount) * 100) if monthly_budget_amount > 0 else 0
 
     # Fetch the last 5 expenses
@@ -324,17 +328,19 @@ def dashboard():
         'date': expense.date.astimezone(local_tz)
     } for expense in last_5_expenses]
 
+    expenses_exceeded = total_expenses > monthly_budget_amount
     return render_template("dashboard.html",
                            monthly_budget=monthly_budget_amount,
                            total_expenses=total_expenses,
                            remaining_budget=remaining_monthly_budget,
                            remaining_budget_percentage=remaining_budget_percentage,
                            category_expenses=category_expenses_data,
-                           daily_expenses=last_7_days_expenses_data,  
+                           daily_expenses=last_7_days_expenses_data,
                            expense_percentage=expense_percentage,
                            last_month_expenses=last_month_expenses,
                            current_month=current_month,
                            current_year=current_year,
                            last_month=last_month,
                            last_month_year=last_month_year,
-                           last_5_expenses=last_5_expenses_data)  
+                           last_5_expenses=last_5_expenses_data,
+                           expenses_exceeded=expenses_exceeded)  

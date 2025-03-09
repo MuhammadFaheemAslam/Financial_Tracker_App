@@ -1,6 +1,21 @@
 // Get the data from the HTML script tag
 var dailyExpensesData = JSON.parse(document.getElementById('dailyExpensesData').textContent);
 
+// Sort the dailyExpensesData by date (ascending order)
+dailyExpensesData.sort(function(a, b) {
+    var dateA = new Date();
+    var dateB = new Date();
+    
+    dateA.setDate(a.day); // Set the day from the data
+    dateB.setDate(b.day); // Set the day from the data
+    
+    var year = new Date().getFullYear(); // Use current year for comparison
+    dateA.setFullYear(year);
+    dateB.setFullYear(year);
+    
+    return dateA - dateB;  // Sort by date ascending
+});
+
 // Prepare data for the chart
 var labels = dailyExpensesData.map(function(item) { 
     // Format each date as 'Month Name Day' (e.g., 'March 5')
@@ -39,3 +54,4 @@ var dailyExpenseChart = new Chart(ctx, {
         }
     }
 });
+

@@ -61,15 +61,12 @@ def logout():
     flash('Logged out successfully.', 'success')
     return redirect(url_for('main.login'))
 
-
 # View Budgets
 @bp.route('/view_budgets', methods=['GET'])
 @login_required
 def view_budgets():
     budgets = Budget.query.filter_by(user_id=current_user.id).order_by(Budget.year.desc(), Budget.month.desc()).all()
-
     return render_template('view_budgets.html', budgets=budgets)
-
 
 # Set Budget (Create New Budget)
 @bp.route('/set_budget', methods=['GET', 'POST'])
@@ -78,44 +75,47 @@ def set_budget():
     months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     
     if request.method == 'POST':
-        amount = float(request.form.get('amount'))
-        period = request.form.get('period')  
-        budget_month = int(request.form.get('budget_month'))
-        budget_year = int(request.form.get('budget_year'))
+        try:
+            amount = float(request.form.get('amount'))
+            period = request.form.get('period')  
+            budget_month = int(request.form.get('budget_month'))
+            budget_year = int(request.form.get('budget_year'))
 
-        existing_budget = Budget.query.filter_by(
-            user_id=current_user.id, period=period, month=budget_month, year=budget_year
-        ).first()
+            if amount < 0:
+                flash('Budget cannot be negative', 'warning')
+                return redirect(url_for('main.set_budget'))
 
-        if amount < 0:
-            flash('Budget cannot be Negative', 'warning')
-            return redirect(url_for('main.set_budget'))
-        
-        if existing_budget:
-            flash(f'Budget already exists for {months[budget_month-1]} {budget_year}. Please update it.', 'danger')
+            existing_budget = Budget.query.filter_by(
+                user_id=current_user.id, period=period, month=budget_month, year=budget_year
+            ).first()
+
+            if existing_budget:
+                flash(f'Budget already exists for {months[budget_month-1]} {budget_year}. Please update it.', 'danger')
+                return redirect(url_for('main.view_budgets'))
+
+            new_budget = Budget(
+                user_id=current_user.id, amount=amount, period=period,
+                month=budget_month, year=budget_year
+            )
+            db.session.add(new_budget)
+            db.session.commit()
+            flash(f'{period.capitalize()} budget set successfully for {months[budget_month-1]} {budget_year}!', 'success')
             return redirect(url_for('main.view_budgets'))
 
-        new_budget = Budget(
-            user_id=current_user.id, amount=amount, period=period,
-            month=budget_month, year=budget_year
-        )
-        db.session.add(new_budget)
-        db.session.commit()
-        flash(f'{period.capitalize()} budget set successfully for {months[budget_month-1]} {budget_year}!', 'success')
-        return redirect(url_for('main.view_budgets'))
+        except ValueError:
+            flash("Invalid input. Please ensure all fields are filled correctly.", "danger")
+            return redirect(url_for('main.set_budget'))
 
-    current_year = 2025 
-    years = [current_year, current_year + 1, current_year + 2]
+    current_year = datetime.now().year 
+    years = [current_year, current_year + 1, current_year + 2, current_year + 3]
 
     return render_template('set_budget.html', months=months, years=years)
 
-
-#edit budget
+# Edit Budget
 @bp.route('/edit_budget/<int:budget_id>', methods=['GET', 'POST'])
 @login_required
 def edit_budget(budget_id):
-    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
-              'August', 'September', 'October', 'November', 'December']
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     budget = Budget.query.filter_by(id=budget_id, user_id=current_user.id).first()
 
     if not budget:
@@ -129,6 +129,10 @@ def edit_budget(budget_id):
             budget_month = int(request.form['budget_month'])  
             budget_year = int(request.form['budget_year'])
 
+            if amount < 0:
+                flash('Budget amount cannot be negative', 'warning')
+                return redirect(url_for('main.edit_budget', budget_id=budget.id))
+
             budget.amount = amount
             budget.period = period
             budget.month = budget_month
@@ -138,14 +142,13 @@ def edit_budget(budget_id):
             flash(f'{period.capitalize()} budget updated successfully for {months[budget_month-1]} {budget_year}!', 'success')
             return redirect(url_for('main.view_budgets'))
 
-        except (ValueError, TypeError):
+        except ValueError:
             flash("Invalid input. Please check your values.", "danger")
 
     current_year = datetime.now().year
     years = list(range(current_year, current_year + 3))
 
     return render_template('edit_budget.html', months=months, years=years, budget=budget)
-
 
 # Delete Budget
 @bp.route('/delete_budget/<int:budget_id>', methods=['POST'])
@@ -163,8 +166,6 @@ def delete_budget(budget_id):
 
     return redirect(url_for('main.view_budgets'))
 
-
-
 # Add Category
 @bp.route('/add_category', methods=['POST'])
 @login_required
@@ -181,8 +182,6 @@ def add_category():
         flash('Category added successfully', 'success')
 
     return redirect(url_for('main.add_expense'))
-
-
 
 # Add Expense
 @bp.route('/add_expense', methods=['GET', 'POST'])
@@ -220,8 +219,7 @@ def add_expense():
 
     return render_template('add_expense.html', categories=categories)
 
-
-#view expenses
+# View Expenses
 @bp.route('/expenses')
 @login_required
 def view_expenses():
@@ -268,26 +266,29 @@ def view_expenses():
     )
 
 
-
 @bp.route('/dashboard', methods=['GET'])
 @login_required
 def dashboard():
     current_month = datetime.utcnow().month
     current_year = datetime.utcnow().year
-    today = datetime.utcnow()  
+    today = datetime.utcnow()
 
+    # Get the current month's budget
     monthly_budget = Budget.query.filter_by(user_id=current_user.id, period="monthly", month=current_month, year=current_year).first()
     monthly_budget_amount = monthly_budget.amount if monthly_budget else 0
 
-    total_expenses = db.session.query(func.sum(Expense.amount)).filter(
+    # Calculate the total expenses for the current month
+    total_expenses = round(db.session.query(func.sum(Expense.amount)).filter(
         Expense.user_id == current_user.id,
         func.extract('month', Expense.date) == current_month,
         func.extract('year', Expense.date) == current_year
-    ).scalar() or 0
+    ).scalar() or 0, 2)
 
-    remaining_monthly_budget = round(monthly_budget_amount - total_expenses,2)
+    # Calculate remaining budget and percentage
+    remaining_monthly_budget = round(monthly_budget_amount - total_expenses, 2)
     remaining_budget_percentage = round((remaining_monthly_budget / monthly_budget_amount) * 100) if monthly_budget_amount > 0 else 0
 
+    # Fetch category-wise expense data
     category_expenses = db.session.query(Category.name, func.sum(Expense.amount)).join(Expense).filter(
         Expense.user_id == current_user.id,
         func.extract('month', Expense.date) == current_month,
@@ -296,16 +297,16 @@ def dashboard():
 
     category_expenses_data = [{"category": category, "total": total} for category, total in category_expenses]
 
-
+    # Fetch expenses for the last 7 days
     last_7_days_expenses = db.session.query(func.extract('day', Expense.date), func.sum(Expense.amount)).filter(
         Expense.user_id == current_user.id,
-        Expense.date >= today - timedelta(days=7),  
+        Expense.date >= today - timedelta(days=7),
         Expense.date <= today
     ).group_by(func.extract('day', Expense.date)).all()
 
     last_7_days_expenses_data = [{"day": int(day), "total": total} for day, total in last_7_days_expenses]
 
-
+    # Calculate last month's expenses
     last_month = current_month - 1 if current_month > 1 else 12
     last_month_year = current_year if current_month > 1 else current_year - 1
 
@@ -315,6 +316,7 @@ def dashboard():
         func.extract('year', Expense.date) == last_month_year
     ).scalar() or 0
 
+    # Calculate the expense percentage of the monthly budget
     expense_percentage = round((total_expenses / monthly_budget_amount) * 100) if monthly_budget_amount > 0 else 0
 
     # Fetch the last 5 expenses
@@ -326,17 +328,19 @@ def dashboard():
         'date': expense.date.astimezone(local_tz)
     } for expense in last_5_expenses]
 
+    expenses_exceeded = total_expenses > monthly_budget_amount
     return render_template("dashboard.html",
                            monthly_budget=monthly_budget_amount,
                            total_expenses=total_expenses,
                            remaining_budget=remaining_monthly_budget,
                            remaining_budget_percentage=remaining_budget_percentage,
                            category_expenses=category_expenses_data,
-                           daily_expenses=last_7_days_expenses_data,  
+                           daily_expenses=last_7_days_expenses_data,
                            expense_percentage=expense_percentage,
                            last_month_expenses=last_month_expenses,
                            current_month=current_month,
                            current_year=current_year,
                            last_month=last_month,
                            last_month_year=last_month_year,
-                           last_5_expenses=last_5_expenses_data)  
+                           last_5_expenses=last_5_expenses_data,
+                           expenses_exceeded=expenses_exceeded)  
