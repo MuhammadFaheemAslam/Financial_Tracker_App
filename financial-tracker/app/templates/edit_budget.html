@@ -55,11 +55,12 @@
           {% endfor %}
         </select>
       </div>
-
-      <button type="submit" class="btn btn-success mt-3">Save Changes</button>
+      <div class="d-flex justify-content-between mt-3"> 
+      <button type="submit" class="btn btn-success">Save Changes</button>
+        <a href="{{ url_for('main.view_budgets') }}" class="btn btn-danger px-4">Cancel</a>
+      </div>
     </form>
-
-    <a href="{{ url_for('main.view_budgets') }}" class="btn btn-primary mt-3">Cancel</a>
+    
   </div>
 </div>
 </div>
