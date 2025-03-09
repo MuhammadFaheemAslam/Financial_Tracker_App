@@ -39,34 +39,61 @@ The app uses Flask for the backend, MySQL for data storage (via AWS RDS), and EC
   - Deployed on AWS EC2 with MySQL database hosted on AWS RDS for reliable data storage.
 
 ## Apps Overview
+### Registration Page
+ Register the user with email and give username and password.
+
+  ![Register Page](financial-tracker/AppScreens/RegistrationPage.png "Registration Page")
+
+### Login Page
+  Login into the app with your registerd email.
+
+  ![Home Page](financial-tracker/AppScreens/LoginPage.png "Login Page")
+
 
 ### Home Page
+   The HomePage shows an overview of Add expenses, Set budget.
 
-    ![Home Page](AppScreens/Homepage.png "Home Page")
+  ![Home Page](financial-tracker/AppScreens/Homepage.png "Home Page")
 
-The HomePage shows an overview of Add expenses, Set budget.
 
-### Home Page
+### Dashboard Page
+  The dashboard shows an overview of your total monthly expenses, budget, and a comparison chart.
+  
+ ![Dashboard Page](financial-tracker/AppScreens/DashboardPage.png "Dashboard Page")
 
-    ![Dashboard Page](screenshots/homepage.png "Home Page")
+ 
+### Set Budget
+  Set and view monthly budgets for various categories.
+  
+![Monthly Budget](financial-tracker/AppScreens/AddBudgetPage.png "Monthly Budget Screen")
 
-The dashboard shows an overview of your total monthly expenses, budget, and a comparison chart.
+### View Budgets
+  View the all Budgets you set earlier.
+  
+![Monthly Budget](financial-tracker/AppScreens/ViewBudgetsPage.png "All Budgets Screen")
+
+
+### Update Budgets
+  Update the all Budgets you set earlier.
+  
+![Monthly Budget](financial-tracker/AppScreens/UpdateBudgetPage.png "Modify Budgets Screen")
+
+### Delete Budgets
+  Delete the Budgets you set earlier.
+  
+![Monthly Budget](financial-tracker/AppScreens/DeleteBudgetPage.png "Delete Budgets Screen")
 
 ### Add Expense
+  Easily add new expenses, categorize them, and track spending.
 
-![Add Expense](screenshots/add-expense.png "Add Expense Screen")
+![Add Expense](financial-tracker/AppScreens/AddExpensePage.png "Add Expense Screen")
 
-Easily add new expenses, categorize them, and track spending.
 
-### Monthly Budget
+### View Expense
+  View all your expenses.
 
-![Monthly Budget](screenshots/monthly-budget.png "Monthly Budget Screen")
+![View Expense](financial-tracker/AppScreens/ViewExpensesPage.png "All Expense Screen")
 
-Set and view monthly budgets for various categories.
-
-### Data Visualization
-
-![Data Visualization](screenshots/data-visualization.png "Data Visualization Screen")
 
 Charts that compare your expenses to your budget over time.
 
