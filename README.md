@@ -95,6 +95,12 @@ The app uses Flask for the backend, MySQL for data storage (via AWS RDS), and EC
 ![View Expense](financial-tracker/AppScreens/ViewExpensesPage.png "All Expense Screen")
 
 
+### Update Expense
+  Edit your expenses.
+
+![Update Expense](financial-tracker/AppScreens/EditExpensesPage.png "Update Expense Screen")
+
+
 Charts that compare your expenses to your budget over time.
 
 ## Installation
