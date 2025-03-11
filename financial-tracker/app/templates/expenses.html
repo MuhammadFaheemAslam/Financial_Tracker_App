@@ -14,7 +14,7 @@
                 <!-- Month Filter -->
                 <div class="col-md-3">
                     <select class="form-select" name="month" id="month" onchange="this.form.submit()">
-                        <option value="">All Months</option>  <!-- Option for all months -->
+                        <option value="">All Months</option>
                         {% for m in range(1, 13) %}
                             <option value="{{ m }}" {% if m == month %} selected {% endif %}>
                                 {{ months[m-1] }}
@@ -26,7 +26,7 @@
                 <!-- Year Filter -->
                 <div class="col-md-3">
                     <select class="form-select" name="year" id="year" onchange="this.form.submit()">
-                        <option value="">All Years</option>  <!-- Option for all years -->
+                        <option value="">All Years</option>
                         {% for y in range(current_year - 1, current_year + 2) %}
                             <option value="{{ y }}" {% if y == year %} selected {% endif %}>{{ y }}</option>
                         {% endfor %}
@@ -36,7 +36,7 @@
                 <!-- Category Filter -->
                 <div class="col-md-3">
                     <select class="form-select" name="category" id="category" onchange="this.form.submit()">
-                        <option value="">All Categories</option>  <!-- Option for all categories -->
+                        <option value="">All Categories</option>
                         {% for category in categories %}
                             <option value="{{ category.id }}" {% if category.id == selected_category %} selected {% endif %}>{{ category.name }}</option>
                         {% endfor %}
@@ -53,6 +53,7 @@
                     <th>Category</th>
                     <th>Amount</th>
                     <th>Description</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -62,11 +63,20 @@
                         <td>{{ expense.category.name }}</td>
                         <td>${{ "{:,.2f}".format(expense.amount) }}</td>
                         <td>{{ expense.description }}</td>
+                        <td>
+                            <a href="{{ url_for('main.edit_expense', expense_id=expense.id) }}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <form action="{{ url_for('main.delete_expense', expense_id=expense.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this expense?');">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
-
 {% endblock %}

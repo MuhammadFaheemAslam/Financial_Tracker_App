@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-md-center">
+    <div class="col col-lg-9 shadow p-5">
+        <h2 class="mb-4">Edit Expense</h2>
+        
+        <form method="POST">
+
+            <!-- Date -->
+            <div class="mb-3">
+                <label for="date" class="form-label">Date</label>
+                <input type="datetime-local" id="date" name="date" class="form-control" 
+                       value="{{ expense.date.strftime('%Y-%m-%dT%H:%M') }}" required>
+            </div>
+
+            <!-- Category -->
+            <div class="mb-3">
+                <label for="category" class="form-label">Category</label>
+                <select id="category" name="category_id" class="form-select" required>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category.id == expense.category_id %} selected {% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Amount -->
+            <div class="mb-3">
+                <label for="amount" class="form-label">Amount</label>
+                <input type="number" step="0.01" id="amount" name="amount" class="form-control" 
+                       value="{{ expense.amount }}" required>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="3" required>{{ expense.description }}</textarea>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary px-5">Save </button>
+                <a href="{{ url_for('main.view_expenses') }}" class="btn btn-danger px-5">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
