@@ -338,7 +338,6 @@ def edit_expense(expense_id):
             flash("Invalid input. Please check your values.", "danger")
     return render_template('edit_expense.html', expense=expense, categories=categories)
 
-    # return render_template('edit_expense.html', expense=expense, categories=categories, remaining_budget=remaining_budget)
 
 
 # Delete Expense

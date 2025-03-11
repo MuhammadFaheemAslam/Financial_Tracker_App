@@ -183,12 +183,28 @@ def add_category():
 
     return redirect(url_for('main.add_expense'))
 
+
 # Add Expense
 @bp.route('/add_expense', methods=['GET', 'POST'])
 @login_required
 def add_expense():
     categories = Category.query.all()
-
+    current_month = datetime.utcnow().month
+    current_year = datetime.utcnow().year
+    
+    # Get the current month's budget
+    monthly_budget = Budget.query.filter_by(user_id=current_user.id, period="monthly", month=current_month, year=current_year).first()
+    monthly_budget_amount = monthly_budget.amount if monthly_budget else 0
+    
+    # Calculate the total expenses for the current month
+    total_expenses = db.session.query(func.sum(Expense.amount)).filter(
+        Expense.user_id == current_user.id,
+        func.extract('month', Expense.date) == current_month,
+        func.extract('year', Expense.date) == current_year
+    ).scalar() or 0
+    
+    remaining_budget = monthly_budget_amount - total_expenses
+    
     if request.method == 'POST':
         category_id = request.form.get('category')
         amount = float(request.form.get('amount'))
@@ -200,6 +216,9 @@ def add_expense():
             return redirect(url_for('main.add_expense'))
         if not category_id:
             flash("Please select a category", "danger")
+            return redirect(url_for('main.add_expense'))
+        if amount > remaining_budget:
+            flash("Expense amount exceeds your remaining budget!", "danger")
             return redirect(url_for('main.add_expense'))
         if expense_date:
             expense_date = datetime.fromisoformat(expense_date)  
@@ -217,7 +236,8 @@ def add_expense():
         flash('Expense added successfully!', 'success')
         return redirect(url_for('main.dashboard'))
 
-    return render_template('add_expense.html', categories=categories)
+    return render_template('add_expense.html', categories=categories, remaining_budget=remaining_budget)
+
 
 # View Expenses
 @bp.route('/expenses')
@@ -264,6 +284,77 @@ def view_expenses():
         categories=categories,
         selected_category=selected_category
     )
+
+
+# Edit Expense
+@bp.route('/edit_expense/<int:expense_id>', methods=['GET', 'POST'])
+@login_required
+def edit_expense(expense_id):
+    expense = Expense.query.filter_by(id=expense_id, user_id=current_user.id).first()
+    if not expense:
+        flash("Expense not found or access denied.", "danger")
+        return redirect(url_for('main.view_expenses'))
+
+    categories = Category.query.all()
+    current_month = datetime.utcnow().month
+    current_year = datetime.utcnow().year
+
+    monthly_budget = Budget.query.filter_by(user_id=current_user.id, period="monthly", month=current_month, year=current_year).first()
+    monthly_budget_amount = monthly_budget.amount if monthly_budget else 0
+
+    total_expenses = db.session.query(func.sum(Expense.amount)).filter(
+        Expense.user_id == current_user.id,
+        func.extract('month', Expense.date) == current_month,
+        func.extract('year', Expense.date) == current_year
+    ).scalar() or 0
+
+    remaining_budget = monthly_budget_amount - total_expenses + expense.amount  # Adding back the original expense
+
+    if request.method == 'POST':
+        try:
+            category_id = request.form.get('category')
+            amount = float(request.form.get('amount'))
+            description = request.form.get('description')
+            expense_date = request.form.get('expense_date')
+
+            if amount < 0:
+                flash("Amount cannot be negative.", "danger")
+                return redirect(url_for('main.edit_expense', expense_id=expense.id))
+
+            if amount > remaining_budget:
+                flash("Updated expense exceeds your remaining budget!", "danger")
+                return redirect(url_for('main.edit_expense', expense_id=expense.id))
+
+            expense.category_id = category_id
+            expense.amount = amount
+            expense.description = description
+            expense.date = datetime.fromisoformat(expense_date) if expense_date else datetime.utcnow()
+
+            db.session.commit()
+            flash("Expense updated successfully!", "success")
+            return redirect(url_for('main.view_expenses'))
+
+        except ValueError:
+            flash("Invalid input. Please check your values.", "danger")
+    return render_template('edit_expense.html', expense=expense, categories=categories)
+
+
+
+# Delete Expense
+@bp.route('/delete_expense/<int:expense_id>', methods=['POST'])
+@login_required
+def delete_expense(expense_id):
+    expense = Expense.query.filter_by(id=expense_id, user_id=current_user.id).first()
+    if not expense:
+        flash("Expense not found or access denied.", "danger")
+        return redirect(url_for('main.view_expenses'))
+
+    db.session.delete(expense)
+    db.session.commit()
+    flash("Expense deleted successfully!", "success")
+
+    return redirect(url_for('main.view_expenses'))
+
 
 
 @bp.route('/dashboard', methods=['GET'])
