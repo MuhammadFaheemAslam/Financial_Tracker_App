@@ -21,6 +21,10 @@ def register():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
+        
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists. Please choose a different one.', 'danger')
+            return redirect(url_for('main.register'))
 
         if User.query.filter_by(email=email).first():
             flash('Email already exists.', 'danger')
@@ -28,11 +32,16 @@ def register():
 
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         new_user = User(username=username, email=email, password_hash=hashed_password)
-
-        db.session.add(new_user)
-        db.session.commit()
-        flash('Account created successfully! Please log in.', 'success')
-        return redirect(url_for('main.login'))
+        
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Account created successfully! Please log in.', 'success')
+            return redirect(url_for('main.login'))
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while creating your account. Please try again.', 'danger')
+            return redirect(url_for('main.register'))
 
     return render_template('register.html')
 
@@ -72,6 +81,7 @@ def view_budgets():
 @bp.route('/set_budget', methods=['GET', 'POST'])
 @login_required
 def set_budget():
+    print("set budget")
     months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     
     if request.method == 'POST':
@@ -286,7 +296,7 @@ def view_expenses():
     )
 
 
-# Edit Expense
+#Edit expense
 @bp.route('/edit_expense/<int:expense_id>', methods=['GET', 'POST'])
 @login_required
 def edit_expense(expense_id):
@@ -299,24 +309,28 @@ def edit_expense(expense_id):
     current_month = datetime.utcnow().month
     current_year = datetime.utcnow().year
 
+    # Get the user's monthly budget
     monthly_budget = Budget.query.filter_by(user_id=current_user.id, period="monthly", month=current_month, year=current_year).first()
     monthly_budget_amount = monthly_budget.amount if monthly_budget else 0
 
+    # Calculate total expenses for the current month
     total_expenses = db.session.query(func.sum(Expense.amount)).filter(
         Expense.user_id == current_user.id,
         func.extract('month', Expense.date) == current_month,
         func.extract('year', Expense.date) == current_year
     ).scalar() or 0
 
-    remaining_budget = monthly_budget_amount - total_expenses + expense.amount  # Adding back the original expense
+    # Calculate remaining budget (taking into account the original expense)
+    remaining_budget = monthly_budget_amount - total_expenses + expense.amount
 
     if request.method == 'POST':
         try:
-            category_id = request.form.get('category')
+            category_id = request.form.get('category_id')
             amount = float(request.form.get('amount'))
             description = request.form.get('description')
             expense_date = request.form.get('expense_date')
-
+            print(category_id)
+            # Validation checks
             if amount < 0:
                 flash("Amount cannot be negative.", "danger")
                 return redirect(url_for('main.edit_expense', expense_id=expense.id))
@@ -325,6 +339,11 @@ def edit_expense(expense_id):
                 flash("Updated expense exceeds your remaining budget!", "danger")
                 return redirect(url_for('main.edit_expense', expense_id=expense.id))
 
+            if not category_id or not description:
+                flash("All fields must be filled out.", "danger")
+                return redirect(url_for('main.edit_expense', expense_id=expense.id))
+
+            # Update the expense
             expense.category_id = category_id
             expense.amount = amount
             expense.description = description
@@ -336,7 +355,9 @@ def edit_expense(expense_id):
 
         except ValueError:
             flash("Invalid input. Please check your values.", "danger")
+
     return render_template('edit_expense.html', expense=expense, categories=categories)
+
 
 
 

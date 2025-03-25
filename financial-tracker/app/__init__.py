@@ -19,6 +19,11 @@ def create_app():
     login_manager.login_view = 'main.login'
 
     migrate.init_app(app, db)  # Bind Migrate with the app and db
+    
+    # Set login behavior
+    login_manager.login_view = 'main.login'  
+    login_manager.login_message = "You need to log in to access this page."
+    login_manager.login_message_category = "warning" 
 
     from app import routes
     app.register_blueprint(routes.bp)
